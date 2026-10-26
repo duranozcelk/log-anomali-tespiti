@@ -1,0 +1,18 @@
+# Python sanal ortami
+venv/
+.venv/
+
+# Python onbellek
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Isletim sistemi
+.DS_Store
+Thumbs.db
+
+# NOT: data/ icindeki kucuk ornek loglar simdilik repoya ekleniyor (1. hafta
+# ciktisi gorunsun diye). Dosyalar cok buyurse asagidaki satiri acabilirsin:
+# data/*.log
