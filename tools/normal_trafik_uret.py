@@ -20,7 +20,8 @@ import datetime
 SEED = 42                        # Ayni sonucu tekrar uretebilmek icin sabit tohum
 TARIH = datetime.date(2026, 3, 14)
 TZ = "+0300"                     # Zaman dilimi (Turkiye)
-CIKTI_DOSYASI = "data/normal_trafik.log"
+CIKTI_DOSYASI = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "normal_trafik.log")
 NORMAL_KULLANICI_SAYISI = 200    # Kac farkli normal kullanici (IP) olacak
 # -----------------------------------------------------------------------
 
@@ -107,7 +108,7 @@ def kullanici_oturumlari_uret(ip, ua):
 
 
 def main():
-    os.makedirs("data", exist_ok=True)
+    os.makedirs(os.path.dirname(CIKTI_DOSYASI), exist_ok=True)
 
     tum_satirlar = []
     for _ in range(NORMAL_KULLANICI_SAYISI):
