@@ -1,0 +1,6 @@
+AYRIŞTIRMA ÖZETİ
+Okunan dosya        : c:\Users\Duran Ozcelik\Desktop\log-anomali-tespiti\data\test.log
+Toplam satır        : 7278
+Başarıyla ayrıştı   : 7278
+Bozuk (ayrı dosyada): 0
+Başarı oranı        : %100.00

@@ -1,0 +1,9 @@
+185.220.101.45 - - [14/Mar/2026:03:12:07 +0300] "GET /admin/config.php HTTP/1.1" 404 153 "-" "python-requests/2.31"
+127.0.0.1 - frank [14/Mar/2026:13:55:36 +0300] "GET /index.html HTTP/1.0" 200 2326
+85.12.40.7 - - [14/Mar/2026:10:15:51 +0300] "GET /sepet HTTP/1.1" 304 - "-" "Mozilla/5.0"
+193.34.76.22 - - [14/Mar/2026:15:40:00 +0300] "GET /urun.php?id=5%27%20OR%201=1-- HTTP/1.1" 500 800 "-" "curl/8.4.0"
+185.220.101.45 - - [14/Mar/2026:02:15:00 +0300] "POST /login HTTP/1.1" 401 350 "-" "python-requests/2.31.0"
+bu satir tamamen bozuk bir metin
+185.220.101.45 - - [14/Mar/2026:03:12:07 +0300] "GET /admin
+10.0.0.5 - - [32/Mar/2026:10:00:00 +0300] "GET / HTTP/1.1" 200 512 "-" "Mozilla/5.0"
+10.0.0.6 - - [14/Mar/2026:10:00:00 +0300] "GET / HTTP/1.1" 20 512 "-" "Mozilla/5.0"
