@@ -1,0 +1,6 @@
+grup,istek_sayisi,hata_orani,saniyede_farkli_url,giris_denemesi,toplam_mb,gece_orani,pencere_sayisi
+normal,7.0,0.0,0.017,0.0,0.144,0.0,669
+brute_force,500.0,0.0,0.003,500.0,0.167,1.0,1
+dizin_tarama,2000.0,0.95,6.667,0.0,0.572,1.0,1
+gece_veri_cekme,11.5,0.0,0.038,0.0,178.5,1.0,6
+sqli_xss,25.0,0.368,0.02,0.0,0.019,0.0,2
