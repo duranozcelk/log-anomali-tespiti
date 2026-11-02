@@ -1,203 +1,289 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-saldiri_uret.py
----------------
-normal_trafik.log dosyasini okur, icine KONTROLLU saldiri senaryolari ekler ve
-ikisini birlestirip zamana gore sirali bir TEST logu uretir. Ayrica hangi IP'nin
-hangi saldiriyi yaptigini "gercek etiket" (ground truth) olarak kaydeder.
-
-Ciktilar:
-    data/test.log        -> normal + saldiri (karisik, zamana gore sirali)
-    data/etiketler.csv   -> saldirgan IP'ler ve saldiri turu (dogrulama icin)
-
-NOT: Bu betik gercek bir saldiri YAPMAZ. Yalnizca saldirilarin bir log dosyasinda
-     nasil gorundugunu taklit eden METIN satirlari uretir. Amac, tespit sistemini
-     test edebilmek icin "cevap anahtari" olan yapay bir veri hazirlamaktir.
-
-Calistirma (proje ana klasorunden, once normal_trafik_uret.py calistirilmali):
-    python tools/saldiri_uret.py
-"""
+# =====================================================================
+# saldiri_uret.py
+# ---------------------------------------------------------------------
+# GÖREV : Normal logun içine 4 tür sahte saldırı ekleyip test logu üretmek.
+#
+#   GİRDİ : data/normal_trafik.log  (önce normal_trafik_uret.py çalıştırılmalı)
+#   ÇIKTI : data/test.log           (normal + saldırı, zaman sırasına göre karışık)
+#           data/etiketler.csv      (hangi IP saldırgan -> CEVAP ANAHTARI)
+#
+# NOT : Gerçek bir saldırı YAPILMAZ. Sadece saldırıların logda nasıl
+#       göründüğünü taklit eden METİN satırları yazılır.
+#
+# ÇALIŞTIRMA : python tools/saldiri_uret.py
+# =====================================================================
 
 import os
-import csv
 import random
-import datetime
-
-SEED = 7
-TARIH = datetime.date(2026, 3, 14)
-TZ_OFFSET = datetime.timezone(datetime.timedelta(hours=3))   # +0300
-TZ_STR = "+0300"
-PROJE_KOKU = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VERI_KLASORU = os.path.join(PROJE_KOKU, "data")
-NORMAL_LOG = os.path.join(VERI_KLASORU, "normal_trafik.log")
-TEST_LOG = os.path.join(VERI_KLASORU, "test.log")
-ETIKET_DOSYASI = os.path.join(VERI_KLASORU, "etiketler.csv")
-
-random.seed(SEED)
-
-# Saldirilarda sik gorulen otomatik arac imzalari (User-Agent)
-ARAC_UA = [
-    "python-requests/2.31.0",
-    "curl/8.4.0",
-    "Mozilla/5.0 (compatible; Nmap Scripting Engine)",
-    "Go-http-client/1.1",
-]
-
-# Dizin taramasinda denenen tipik gizli/yedek yollar
-DIZIN_LISTESI = [
-    "/admin", "/admin/", "/administrator", "/admin/config.php", "/admin/login",
-    "/wp-admin", "/wp-login.php", "/phpmyadmin", "/.env", "/.git/config",
-    "/backup.zip", "/backup.tar.gz", "/db.sql", "/config.php.bak", "/old",
-    "/test", "/dev", "/.htaccess", "/server-status", "/cgi-bin/", "/shell.php",
-    "/uploads/", "/tmp/", "/private/", "/secret/", "/api/v1/users", "/.aws/credentials",
-]
+from datetime import datetime, timedelta
 
 
-def zaman_metni(zaman):
-    return zaman.strftime("%d/%b/%Y:%H:%M:%S") + " " + TZ_STR
+# =====================================================================
+# 1) AYARLAR
+# =====================================================================
+
+random.seed(7)     # Her çalıştırmada AYNI saldırılar üretilsin
+
+# Dosya yolları (betik nereden çalıştırılırsa çalıştırılsın doğru yeri bulur)
+BU_DOSYA       = os.path.abspath(__file__)        # ...\log-anomali-tespiti\tools\saldiri_uret.py
+TOOLS_KLASORU  = os.path.dirname(BU_DOSYA)        # ...\log-anomali-tespiti\tools
+PROJE_KLASORU  = os.path.dirname(TOOLS_KLASORU)   # ...\log-anomali-tespiti
+DATA_KLASORU   = os.path.join(PROJE_KLASORU, "data")
+NORMAL_LOG     = os.path.join(DATA_KLASORU, "normal_trafik.log")
+TEST_LOG       = os.path.join(DATA_KLASORU, "test.log")
+ETIKET_DOSYASI = os.path.join(DATA_KLASORU, "etiketler.csv")
+
+# Saldırgan IP adresleri (cevap anahtarına bunlar yazılacak)
+BRUTE_FORCE_IP  = "185.220.101.45"
+DIZIN_TARAMA_IP = "45.142.212.10"
+VERI_CEKME_IP   = "91.134.20.7"
+ENJEKSIYON_IP   = "193.34.76.22"
 
 
-def satir(ip, zaman, metot, url, durum, boyut, ua):
-    return f'{ip} - - [{zaman_metni(zaman)}] "{metot} {url} HTTP/1.1" {durum} {boyut} "-" "{ua}"'
+# =====================================================================
+# 2) YARDIMCI FONKSİYONLAR (normal_trafik_uret.py'deki ile aynı)
+# =====================================================================
+
+def log_satiri_yap(ip, zaman, metot, url, durum, boyut, tarayici):
+    """Verilen bilgileri birleştirip tek bir log satırı (metin) oluşturur."""
+    zaman_metni = zaman.strftime("%d/%b/%Y:%H:%M:%S")      # -> 14/Mar/2026:02:15:00
+    return f'{ip} - - [{zaman_metni} +0300] "{metot} {url} HTTP/1.1" {durum} {boyut} "-" "{tarayici}"'
 
 
-# --------------------------- SALDIRI SENARYOLARI ---------------------------
+def satirdan_zaman_al(satir):
+    """Bir log satırının içindeki zamanı bulur (sıralama için).
+    '... [14/Mar/2026:02:15:00 +0300] ...'  ->  14/Mar/2026:02:15:00
+    """
+    sag_taraf = satir.split("[")[1]
+    zaman_metni = sag_taraf.split(" ")[0]
+    return datetime.strptime(zaman_metni, "%d/%b/%Y:%H:%M:%S")
 
-def brute_force(ip):
-    """Tek IP, gece /login sayfasina ~5 dk icinde yuzlerce basarisiz giris."""
+
+# =====================================================================
+# 3) SALDIRI 1 — BRUTE-FORCE (kaba kuvvet ile şifre deneme)
+# =====================================================================
+
+def brute_force_uret():
+    """
+    NE OLUYOR : Saldırgan /login sayfasına art arda yüzlerce şifre dener.
+
+    ZAMANLAMA :
+        Başlangıç     : 02:15:00
+        İstek sayısı  : 500
+        İstek arası   : 0,4 - 0,8 saniye   (ortalama 0,6 sn)
+        Toplam süre   : 500 x 0,6 sn = 300 sn = 5 dakika   (02:15 -> 02:20)
+
+    LOGDAKİ İZİ : Aynı IP, çok sayıda "POST /login", neredeyse hepsi 401 (yanlış şifre)
+    """
     satirlar = []
-    ua = random.choice(ARAC_UA)
-    t = datetime.datetime.combine(TARIH, datetime.time(2, 15, 0), tzinfo=TZ_OFFSET)
-    for _ in range(500):
-        durum = 401 if random.random() < 0.98 else 200   # cok nadir dogru sifre
-        satirlar.append((t, satir(ip, t, "POST", "/login", durum,
-                                  random.randint(200, 500), ua)))
-        t = t + datetime.timedelta(milliseconds=random.randint(200, 900))
-    return satirlar
+    zaman = datetime(2026, 3, 14, 2, 15, 0)        # başlangıç: 14 Mart 2026, 02:15:00
 
-
-def dizin_tarama(ip):
-    """Tek IP, ~3 dk icinde binlerce farkli/var olmayan yolu dener (cogu 404)."""
-    satirlar = []
-    ua = "python-requests/2.31.0"
-    t = datetime.datetime.combine(TARIH, datetime.time(4, 5, 0), tzinfo=TZ_OFFSET)
-    for i in range(2000):
-        if i < len(DIZIN_LISTESI):
-            url = DIZIN_LISTESI[i]
+    for i in range(500):
+        # %98 yanlış şifre (401), %2 doğru şifre (200)
+        if random.randint(1, 100) <= 98:
+            durum = 401
         else:
-            kok = random.choice(["admin", "backup", "old", "data", "files", "api"])
-            url = f"/{kok}/{random.randint(1, 99999)}.php"
-        durum = 404 if random.random() < 0.95 else 200
-        satirlar.append((t, satir(ip, t, "GET", url, durum,
-                                  random.randint(150, 500), ua)))
-        t = t + datetime.timedelta(milliseconds=random.randint(50, 150))
+            durum = 200
+
+        satir = log_satiri_yap(BRUTE_FORCE_IP, zaman, "POST", "/login", durum, 350, "python-requests/2.31.0")
+        satirlar.append(satir)
+
+        # ZAMAN İLERLER: bir sonraki denemeye kadar 400-800 milisaniye geçer
+        bekleme_ms = random.randint(400, 800)
+        zaman = zaman + timedelta(milliseconds=bekleme_ms)
+
     return satirlar
 
 
-def gece_veri_cekme(ip):
-    """Tek IP, gece 03:00-03:30 arasi toplam ~900 MB veri indirir (hepsi 200)."""
+# =====================================================================
+# 4) SALDIRI 2 — DİZİN TARAMA (gizli dosya/klasör arama)
+# =====================================================================
+
+# Botların ilk denediği bilinen gizli yollar
+GIZLI_YOLLAR = [
+    "/admin", "/admin/config.php", "/wp-admin", "/phpmyadmin", "/.env",
+    "/.git/config", "/backup.zip", "/db.sql", "/config.php.bak", "/server-status",
+]
+
+def dizin_tarama_uret():
+    """
+    NE OLUYOR : Bir bot, sitede gizli dosya var mı diye binlerce farklı yolu dener.
+
+    ZAMANLAMA :
+        Başlangıç     : 04:05:00
+        İstek sayısı  : 2000
+        İstek arası   : 60 - 120 milisaniye   (ortalama 0,09 sn)
+        Toplam süre   : 2000 x 0,09 sn = 180 sn = 3 dakika   (04:05 -> 04:08)
+
+    LOGDAKİ İZİ : Çok sayıda FARKLI URL, çoğu 404 (bulunamadı), insanüstü hız
+    """
     satirlar = []
-    ua = "curl/8.4.0"
-    t = datetime.datetime.combine(TARIH, datetime.time(3, 0, 0), tzinfo=TZ_OFFSET)
-    bitis = datetime.datetime.combine(TARIH, datetime.time(3, 30, 0), tzinfo=TZ_OFFSET)
-    hedef = 900 * 1024 * 1024            # 900 MB (bayt)
-    toplam = 0
-    dosyalar = ["/export/veritabani_yedek.sql", "/downloads/musteri_listesi.csv",
-                "/backup/full_backup.tar.gz", "/export/loglar.zip"]
-    while toplam < hedef and t < bitis:
-        boyut = random.randint(5 * 1024 * 1024, 30 * 1024 * 1024)   # 5-30 MB
-        toplam += boyut
-        satirlar.append((t, satir(ip, t, "GET", random.choice(dosyalar),
-                                  200, boyut, ua)))
-        t = t + datetime.timedelta(seconds=random.randint(1, 8))
+    zaman = datetime(2026, 3, 14, 4, 5, 0)          # başlangıç: 04:05:00
+
+    for i in range(2000):
+        # Önce bilinen gizli yolları dene; liste bitince uydurma yollar dene
+        if i < len(GIZLI_YOLLAR):
+            url = GIZLI_YOLLAR[i]
+        else:
+            url = "/dosya" + str(i) + ".php"        # /dosya10.php, /dosya11.php, ...
+
+        # %95 bulunamadı (404), %5 bulundu (200)
+        if random.randint(1, 100) <= 95:
+            durum = 404
+        else:
+            durum = 200
+
+        satir = log_satiri_yap(DIZIN_TARAMA_IP, zaman, "GET", url, durum, 300, "python-requests/2.31.0")
+        satirlar.append(satir)
+
+        # ZAMAN İLERLER: bir sonraki denemeye kadar 60-120 milisaniye geçer
+        bekleme_ms = random.randint(60, 120)
+        zaman = zaman + timedelta(milliseconds=bekleme_ms)
+
     return satirlar
 
 
-def enjeksiyon(ip):
-    """Tek IP, URL'sine zararli SQLi/XSS kalibi gomulmus istekler atar.
-    Bir kismi %27, %20 gibi URL-kodlu halde (unquote testi icin)."""
+# =====================================================================
+# 5) SALDIRI 3 — GECE VERİ ÇEKME (anormal miktarda veri indirme)
+# =====================================================================
+
+def veri_cekme_uret():
+    """
+    NE OLUYOR : Biri gece saatlerinde sunucudan çok büyük miktarda veri indirir.
+
+    ZAMANLAMA :
+        Başlangıç     : 03:00:00
+        İstek sayısı  : 60 dosya indirme
+        İstek arası   : 20 - 30 saniye   (ortalama 25 sn)
+        Toplam süre   : 60 x 25 sn = 1500 sn = 25 dakika   (03:00 -> ~03:25)
+
+    VERİ MİKTARI : Her dosya 13-17 MB  ->  60 x 15 MB = yaklaşık 900 MB
+
+    LOGDAKİ İZİ : Her istek BAŞARILI (200) görünür!
+                  Şüpheli olan: gece saati + toplam veri miktarı.
+    """
     satirlar = []
-    ua = random.choice(ARAC_UA)
-    # NOT: URL'lerde bosluk yok (log ayristirici boslukla boler); bosluklar
-    # ya %20 ile kodlanmis ya da / ile degistirilmistir -> gercek evazyon teknikleri.
-    kaliplar = [
-        "/urun.php?id=5%27%20OR%201=1--",                                   # ' OR 1=1
-        "/urun.php?id=5%27%20OR%20%271%27=%271",                            # ' OR '1'='1
-        "/login?user=admin%27--",                                          # admin'--
-        "/ara?q=1%20UNION%20SELECT%20username,password%20FROM%20users",    # UNION SELECT
-        "/urun.php?id=1%3B%20DROP%20TABLE%20users--",                       # DROP TABLE
-        "/ara?q=<script>alert(1)</script>",                                # <script>
-        "/ara?q=%3Cscript%3Ealert(1)%3C/script%3E",                        # kodlu <script>
-        "/profil?ad=<img/src=x/onerror=alert(1)>",                         # onerror=
-        "/sayfa?url=javascript:alert(document.cookie)",                    # javascript:
-        "/yorum?msg=%3Csvg/onload=alert(1)%3E",                            # kodlu onload
-    ]
-    t = datetime.datetime.combine(TARIH, datetime.time(15, 40, 0), tzinfo=TZ_OFFSET)
-    for _ in range(50):
-        durum = random.choice([200, 403, 500])
-        satirlar.append((t, satir(ip, t, "GET", random.choice(kaliplar),
-                                  durum, random.randint(200, 1500), ua)))
-        t = t + datetime.timedelta(seconds=random.randint(3, 20))
+    zaman = datetime(2026, 3, 14, 3, 0, 0)          # başlangıç: 03:00:00
+
+    for i in range(60):
+        url = "/export/yedek_" + str(i) + ".zip"    # /export/yedek_0.zip, /export/yedek_1.zip, ...
+
+        # Dosya boyutu: 13-17 MB arası. Logda bayt yazılır (1 MB = 1024 x 1024 bayt)
+        boyut = random.randint(13, 17) * 1024 * 1024
+
+        satir = log_satiri_yap(VERI_CEKME_IP, zaman, "GET", url, 200, boyut, "curl/8.4.0")
+        satirlar.append(satir)
+
+        # ZAMAN İLERLER: bir sonraki indirmeye kadar 20-30 saniye geçer
+        bekleme = random.randint(20, 30)
+        zaman = zaman + timedelta(seconds=bekleme)
+
     return satirlar
 
 
-# ------------------------------- BIRLESTIRME -------------------------------
+# =====================================================================
+# 6) SALDIRI 4 — SQL INJECTION ve XSS (URL'ye zararlı kod gömme)
+# =====================================================================
 
-def normal_logu_oku():
-    if not os.path.exists(NORMAL_LOG):
-        raise FileNotFoundError(
-            f"{NORMAL_LOG} bulunamadi. Once calistir: python tools/normal_trafik_uret.py"
-        )
-    with open(NORMAL_LOG, encoding="utf-8") as f:
-        return [s.rstrip("\n") for s in f if s.strip()]
+# URL'lerde boşluk olamaz, bu yüzden saldırganlar karakterleri KODLAR:
+#   %20 = boşluk     %27 = ' (tek tırnak)     %3C = <     %3E = >
+ZARARLI_URLLER = [
+    "/urun.php?id=5%27%20OR%201=1--",               # çözülünce: 5' OR 1=1--             (SQL Injection)
+    "/ara?q=1%20UNION%20SELECT%20kullanici,sifre",   # çözülünce: 1 UNION SELECT ...      (SQL Injection)
+    "/urun.php?id=1;DROP%20TABLE%20kullanicilar",    # çözülünce: 1;DROP TABLE ...        (SQL Injection)
+    "/ara?q=<script>alert(1)</script>",              # kodlanmamış                         (XSS)
+    "/ara?q=%3Cscript%3Ealert(1)%3C/script%3E",      # çözülünce: <script>alert(1)</script> (XSS)
+    "/profil?ad=<img/src=x/onerror=alert(1)>",       # kodlanmamış                         (XSS)
+]
+
+def enjeksiyon_uret():
+    """
+    NE OLUYOR : Saldırgan URL'nin içine zararlı SQL veya JavaScript kodu gömer.
+
+    ZAMANLAMA :
+        Başlangıç     : 15:40:00  (gündüz -> normal trafiğin arasına karışır)
+        İstek sayısı  : 50
+        İstek arası   : 5 - 15 saniye   (ortalama 10 sn)
+        Toplam süre   : 50 x 10 sn = 500 sn = yaklaşık 8 dakika   (15:40 -> ~15:48)
+
+    LOGDAKİ İZİ : URL'nin İÇERİĞİ (OR 1=1, UNION SELECT, <script> ...)
+    """
+    satirlar = []
+    zaman = datetime(2026, 3, 14, 15, 40, 0)        # başlangıç: 15:40:00
+
+    for i in range(50):
+        url = random.choice(ZARARLI_URLLER)
+        durum = random.choice([200, 403, 500])      # sunucu bazen cevap verir, bazen engeller, bazen çöker
+
+        satir = log_satiri_yap(ENJEKSIYON_IP, zaman, "GET", url, durum, 800, "curl/8.4.0")
+        satirlar.append(satir)
+
+        # ZAMAN İLERLER: bir sonraki denemeye kadar 5-15 saniye geçer
+        bekleme = random.randint(5, 15)
+        zaman = zaman + timedelta(seconds=bekleme)
+
+    return satirlar
 
 
-def zaman_coz(satir_metni):
-    """Siralama icin bir log satirindan koseli parantez icindeki zamani ayiklar."""
-    ic = satir_metni.split("[", 1)[1].split("]", 1)[0]       # 14/Mar/2026:03:12:07 +0300
-    return datetime.datetime.strptime(ic, "%d/%b/%Y:%H:%M:%S %z")
-
+# =====================================================================
+# 7) ANA PROGRAM
+# =====================================================================
 
 def main():
-    os.makedirs(VERI_KLASORU, exist_ok=True)
+    # --- Adım 1: Normal logu oku ---
+    if not os.path.exists(NORMAL_LOG):
+        print("HATA: normal_trafik.log bulunamadı.")
+        print("Önce şunu çalıştır: python tools/normal_trafik_uret.py")
+        return
 
-    # Saldirgan IP'ler sabit secildi -> etiket dosyasi net olsun
-    saldirilar = [
-        ("185.220.101.45", "brute_force",     brute_force),
-        ("45.142.212.10",  "dizin_tarama",    dizin_tarama),
-        ("91.134.20.7",    "gece_veri_cekme", gece_veri_cekme),
-        ("193.34.76.22",   "sqli_xss",        enjeksiyon),
-    ]
+    tum_satirlar = []
+    with open(NORMAL_LOG, encoding="utf-8") as dosya:
+        for satir in dosya:
+            satir = satir.strip()          # satır sonundaki "\n" karakterini sil
+            if satir != "":                # boş satırları atla
+                tum_satirlar.append(satir)
+    normal_sayisi = len(tum_satirlar)
 
-    birlesik = [(zaman_coz(s), s) for s in normal_logu_oku()]
+    # --- Adım 2: 4 saldırıyı üret ---
+    brute      = brute_force_uret()
+    tarama     = dizin_tarama_uret()
+    veri       = veri_cekme_uret()
+    enjeksiyon = enjeksiyon_uret()
 
-    etiketler = []
-    for ip, tur, fonk in saldirilar:
-        uretilen = fonk(ip)
-        birlesik.extend(uretilen)
-        etiketler.append((ip, tur, len(uretilen)))
+    # --- Adım 3: Saldırıları normal satırların listesine ekle ---
+    tum_satirlar.extend(brute)
+    tum_satirlar.extend(tarama)
+    tum_satirlar.extend(veri)
+    tum_satirlar.extend(enjeksiyon)
 
-    birlesik.sort(key=lambda x: x[0])        # hepsini zamana gore sirala
+    # --- Adım 4: Hepsini zamana göre sırala ---
+    # Böylece saldırılar normal trafiğin arasına karışır (gerçek bir sunucudaki gibi)
+    tum_satirlar.sort(key=satirdan_zaman_al)
 
-    with open(TEST_LOG, "w", encoding="utf-8") as f:
-        for _t, s in birlesik:
-            f.write(s + "\n")
+    # --- Adım 5: test.log dosyasını yaz ---
+    with open(TEST_LOG, "w", encoding="utf-8") as dosya:
+        for satir in tum_satirlar:
+            dosya.write(satir + "\n")
 
-    with open(ETIKET_DOSYASI, "w", newline="", encoding="utf-8") as f:
-        yaz = csv.writer(f)
-        yaz.writerow(["ip", "etiket", "saldiri_turu", "uretilen_satir"])
-        for ip, tur, adet in etiketler:
-            yaz.writerow([ip, "saldiri", tur, adet])
+    # --- Adım 6: Cevap anahtarını (etiketler.csv) yaz ---
+    # Bu dosya MODELE VERİLMEZ. Sadece sonuçları puanlamak için kullanılır.
+    with open(ETIKET_DOSYASI, "w", encoding="utf-8") as dosya:
+        dosya.write("ip,saldiri_turu\n")
+        dosya.write(BRUTE_FORCE_IP  + ",brute_force\n")
+        dosya.write(DIZIN_TARAMA_IP + ",dizin_tarama\n")
+        dosya.write(VERI_CEKME_IP   + ",gece_veri_cekme\n")
+        dosya.write(ENJEKSIYON_IP   + ",sqli_xss\n")
 
-    toplam = len(birlesik)
-    saldiri_satir = sum(a for _, _, a in etiketler)
-    print(f"[OK] test.log yazildi: {toplam} satir "
-          f"({saldiri_satir} saldiri + {toplam - saldiri_satir} normal)")
-    print(f"[OK] etiketler.csv yazildi: {len(etiketler)} saldirgan IP")
-    for ip, tur, adet in etiketler:
-        print(f"     - {ip:16s} {tur:16s} {adet} satir")
+    # --- Adım 7: Ekrana özet yaz ---
+    print(f"Tamam: test.log yazıldı -> toplam {len(tum_satirlar)} satır")
+    print(f"   Normal satır      : {normal_sayisi}")
+    print(f"   Brute-force       : {len(brute)}")
+    print(f"   Dizin tarama      : {len(tarama)}")
+    print(f"   Gece veri çekme   : {len(veri)}")
+    print(f"   SQLi / XSS        : {len(enjeksiyon)}")
+    print("Tamam: etiketler.csv yazıldı (4 saldırgan IP)")
 
 
+# Bu dosya doğrudan çalıştırılınca main() başlar
 if __name__ == "__main__":
     main()

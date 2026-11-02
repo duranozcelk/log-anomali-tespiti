@@ -1,5 +1,5 @@
-ip,etiket,saldiri_turu,uretilen_satir
-185.220.101.45,saldiri,brute_force,500
-45.142.212.10,saldiri,dizin_tarama,2000
-91.134.20.7,saldiri,gece_veri_cekme,55
-193.34.76.22,saldiri,sqli_xss,50
+ip,saldiri_turu
+185.220.101.45,brute_force
+45.142.212.10,dizin_tarama
+91.134.20.7,gece_veri_cekme
+193.34.76.22,sqli_xss
