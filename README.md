@@ -59,11 +59,11 @@ python tools/normal_trafik_uret.py
 
 | Hafta | İş | Durum |
 |------|-----|:-----:|
-| 1 | Ortam kurulumu, klasör yapısı, Git, normal trafik üretimi | ✅ Tamam |
-| 2 | Saldırı üretici betik + test logu + gerçek etiketler | ⬜ |
-| 3 | `parser.py` — Regex ile log ayrıştırma | ⬜ |
-| 4 | `features.py` — öznitelik çıkarımı | ⬜ |
-| 5 | `rules.py` — SQLi/XSS kural filtresi | ⬜ |
+| 1 | Ortam kurulumu, klasör yapısı, Git, normal trafik üretimi | ✅ |
+| 2 | Saldırı üretici betik + test logu + gerçek etiketler | ✅  |
+| 3 | `parser.py` — Regex ile log ayrıştırma | ✅ |
+| 4 | `features.py` — öznitelik çıkarımı | ✅ |
+| 5 | `rules.py` — SQLi/XSS kural filtresi | ✅ |
 | 6 | `detector.py` — Isolation Forest + uyarı raporu | ⬜ |
 | 7 | `evaluate.py` — Precision/Recall/F1, karşılaştırmalar | ⬜ |
 | 8 | Final raporu, sunum ve demo | ⬜ |
