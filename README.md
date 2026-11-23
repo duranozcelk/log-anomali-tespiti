@@ -50,9 +50,40 @@ pip install -r requirements.txt
 
 ## Çalıştırma
 
+Komutlar proje ana klasöründen, sanal ortam etkinken **bu sırayla** çalıştırılmalıdır
+(her adım bir öncekinin çıktısını kullanır):
+
 ```bash
-# Normal (saldırısız) örnek trafik üret -> data/normal_trafik.log
+# 1) Normal (saldırısız) örnek trafik üret       -> data/normal_trafik.log
 python tools/normal_trafik_uret.py
+
+# 2) Saldırıları ekle, test logu ve etiketleri üret -> data/test.log, data/etiketler.csv
+python tools/saldiri_uret.py
+
+# 3) Logu ayrıştır (Regex -> tablo)              -> data/temiz_log.csv, data/bozuk_satirlar.log,
+#                                                   reports/ayristirma_ozeti.txt
+python src/parser.py
+
+# 4) Öznitelikleri çıkar (1 ve 5 dk pencere)     -> data/oznitelikler_1dk.csv, data/oznitelikler_5dk.csv
+python src/features.py
+
+# 5) Kural tabanlı SQLi/XSS filtresi             -> data/kural_eslesmeleri.csv,
+#                                                   reports/kural_eslesme_raporu.csv
+python src/rules.py
+```
+
+### Testler ve analiz
+
+```bash
+# Parser testi (5 sağlam + 4 bozuk satır)
+python tools/parser_testi.py
+
+# Kural testi (12 zararlı + 6 masum URL)
+python tools/kural_testi.py
+
+# Öznitelik dağılım grafikleri ve özet tabloları -> reports/oznitelik_dagilimi_*.png,
+#                                                   reports/oznitelik_ozeti_*.csv
+python tools/oznitelik_grafikleri.py
 ```
 
 ## Çalışma planı (8 hafta)
