@@ -1,0 +1,51 @@
+﻿ip,zaman,url,cozulmus_url,kural,saldiri_turu
+193.34.76.22,2026-03-14 15:40:00,/ara?q=<script>alert(1)</script>,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:40:09,/ara?q=<script>alert(1)</script>,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:40:19,/urun.php?id=1;DROP%20TABLE%20kullanicilar,/urun.php?id=1;DROP TABLE kullanicilar,DROP TABLE,SQL Injection
+193.34.76.22,2026-03-14 15:40:32,/ara?q=%3Cscript%3Ealert(1)%3C/script%3E,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:40:44,/profil?ad=<img/src=x/onerror=alert(1)>,/profil?ad=<img/src=x/onerror=alert(1)>,onerror= / onload=,XSS
+193.34.76.22,2026-03-14 15:40:53,/ara?q=<script>alert(1)</script>,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:41:05,/profil?ad=<img/src=x/onerror=alert(1)>,/profil?ad=<img/src=x/onerror=alert(1)>,onerror= / onload=,XSS
+193.34.76.22,2026-03-14 15:41:17,/profil?ad=<img/src=x/onerror=alert(1)>,/profil?ad=<img/src=x/onerror=alert(1)>,onerror= / onload=,XSS
+193.34.76.22,2026-03-14 15:41:24,/ara?q=%3Cscript%3Ealert(1)%3C/script%3E,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:41:29,/profil?ad=<img/src=x/onerror=alert(1)>,/profil?ad=<img/src=x/onerror=alert(1)>,onerror= / onload=,XSS
+193.34.76.22,2026-03-14 15:41:39,/ara?q=<script>alert(1)</script>,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:41:54,"/ara?q=1%20UNION%20SELECT%20kullanici,sifre","/ara?q=1 UNION SELECT kullanici,sifre",UNION SELECT,SQL Injection
+193.34.76.22,2026-03-14 15:42:04,/ara?q=%3Cscript%3Ealert(1)%3C/script%3E,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:42:15,/urun.php?id=1;DROP%20TABLE%20kullanicilar,/urun.php?id=1;DROP TABLE kullanicilar,DROP TABLE,SQL Injection
+193.34.76.22,2026-03-14 15:42:28,"/ara?q=1%20UNION%20SELECT%20kullanici,sifre","/ara?q=1 UNION SELECT kullanici,sifre",UNION SELECT,SQL Injection
+193.34.76.22,2026-03-14 15:42:42,/urun.php?id=1;DROP%20TABLE%20kullanicilar,/urun.php?id=1;DROP TABLE kullanicilar,DROP TABLE,SQL Injection
+193.34.76.22,2026-03-14 15:42:56,"/ara?q=1%20UNION%20SELECT%20kullanici,sifre","/ara?q=1 UNION SELECT kullanici,sifre",UNION SELECT,SQL Injection
+193.34.76.22,2026-03-14 15:43:09,/urun.php?id=1;DROP%20TABLE%20kullanicilar,/urun.php?id=1;DROP TABLE kullanicilar,DROP TABLE,SQL Injection
+193.34.76.22,2026-03-14 15:43:18,"/ara?q=1%20UNION%20SELECT%20kullanici,sifre","/ara?q=1 UNION SELECT kullanici,sifre",UNION SELECT,SQL Injection
+193.34.76.22,2026-03-14 15:43:30,/urun.php?id=5%27%20OR%201=1--,/urun.php?id=5' OR 1=1--,' OR 1=1,SQL Injection
+193.34.76.22,2026-03-14 15:43:45,/ara?q=<script>alert(1)</script>,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:43:53,"/ara?q=1%20UNION%20SELECT%20kullanici,sifre","/ara?q=1 UNION SELECT kullanici,sifre",UNION SELECT,SQL Injection
+193.34.76.22,2026-03-14 15:44:02,/ara?q=%3Cscript%3Ealert(1)%3C/script%3E,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:44:07,/profil?ad=<img/src=x/onerror=alert(1)>,/profil?ad=<img/src=x/onerror=alert(1)>,onerror= / onload=,XSS
+193.34.76.22,2026-03-14 15:44:18,/urun.php?id=1;DROP%20TABLE%20kullanicilar,/urun.php?id=1;DROP TABLE kullanicilar,DROP TABLE,SQL Injection
+193.34.76.22,2026-03-14 15:44:27,/ara?q=<script>alert(1)</script>,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:44:42,/ara?q=%3Cscript%3Ealert(1)%3C/script%3E,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:44:52,"/ara?q=1%20UNION%20SELECT%20kullanici,sifre","/ara?q=1 UNION SELECT kullanici,sifre",UNION SELECT,SQL Injection
+193.34.76.22,2026-03-14 15:45:06,"/ara?q=1%20UNION%20SELECT%20kullanici,sifre","/ara?q=1 UNION SELECT kullanici,sifre",UNION SELECT,SQL Injection
+193.34.76.22,2026-03-14 15:45:14,/profil?ad=<img/src=x/onerror=alert(1)>,/profil?ad=<img/src=x/onerror=alert(1)>,onerror= / onload=,XSS
+193.34.76.22,2026-03-14 15:45:24,/urun.php?id=5%27%20OR%201=1--,/urun.php?id=5' OR 1=1--,' OR 1=1,SQL Injection
+193.34.76.22,2026-03-14 15:45:32,/urun.php?id=1;DROP%20TABLE%20kullanicilar,/urun.php?id=1;DROP TABLE kullanicilar,DROP TABLE,SQL Injection
+193.34.76.22,2026-03-14 15:45:38,/ara?q=<script>alert(1)</script>,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:45:49,/ara?q=%3Cscript%3Ealert(1)%3C/script%3E,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:46:01,/profil?ad=<img/src=x/onerror=alert(1)>,/profil?ad=<img/src=x/onerror=alert(1)>,onerror= / onload=,XSS
+193.34.76.22,2026-03-14 15:46:07,/ara?q=%3Cscript%3Ealert(1)%3C/script%3E,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:46:19,/ara?q=<script>alert(1)</script>,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:46:30,/ara?q=<script>alert(1)</script>,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:46:37,/urun.php?id=5%27%20OR%201=1--,/urun.php?id=5' OR 1=1--,' OR 1=1,SQL Injection
+193.34.76.22,2026-03-14 15:46:48,/ara?q=<script>alert(1)</script>,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:47:01,/urun.php?id=5%27%20OR%201=1--,/urun.php?id=5' OR 1=1--,' OR 1=1,SQL Injection
+193.34.76.22,2026-03-14 15:47:09,/profil?ad=<img/src=x/onerror=alert(1)>,/profil?ad=<img/src=x/onerror=alert(1)>,onerror= / onload=,XSS
+193.34.76.22,2026-03-14 15:47:20,/ara?q=%3Cscript%3Ealert(1)%3C/script%3E,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:47:35,/urun.php?id=1;DROP%20TABLE%20kullanicilar,/urun.php?id=1;DROP TABLE kullanicilar,DROP TABLE,SQL Injection
+193.34.76.22,2026-03-14 15:47:45,/ara?q=<script>alert(1)</script>,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:47:51,/urun.php?id=5%27%20OR%201=1--,/urun.php?id=5' OR 1=1--,' OR 1=1,SQL Injection
+193.34.76.22,2026-03-14 15:47:57,/ara?q=%3Cscript%3Ealert(1)%3C/script%3E,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:48:03,/ara?q=<script>alert(1)</script>,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:48:11,/ara?q=%3Cscript%3Ealert(1)%3C/script%3E,/ara?q=<script>alert(1)</script>,<script>,XSS
+193.34.76.22,2026-03-14 15:48:16,/profil?ad=<img/src=x/onerror=alert(1)>,/profil?ad=<img/src=x/onerror=alert(1)>,onerror= / onload=,XSS

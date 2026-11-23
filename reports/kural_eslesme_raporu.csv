@@ -1,0 +1,2 @@
+﻿ip,etiket,saldiri_turu,kurallar,eslesen_istek
+193.34.76.22,Saldırı,SQL Injection; XSS,' OR 1=1; <script>; DROP TABLE; UNION SELECT; onerror= / onload=,50
